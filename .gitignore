@@ -1,16 +1,38 @@
+# ==========================================
 # .NET (C#)
+# ==========================================
 [Bb]in/
 [Oo]bj/
 *.user
 *.suo
 .vs/
+.vscode/
 
+# Arquivos de publicação e builds
+publish/
+*.db
+
+# ==========================================
 # Python
+# ==========================================
 __pycache__/
 *.py[cod]
 *$py.class
 venv/
 .env
+.venv/
+env/
+*.egg-info/
 
-# Docker e LocalStack
+# ==========================================
+# Docker, LocalStack e Banco de Dados
+# ==========================================
 .localstack/
+.data/
+postgres_data/
+
+# ==========================================
+# Sistema Operacional
+# ==========================================
+.DS_Store
+Thumbs.db
