@@ -1,0 +1,16 @@
+# .NET (C#)
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+.vs/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Docker e LocalStack
+.localstack/

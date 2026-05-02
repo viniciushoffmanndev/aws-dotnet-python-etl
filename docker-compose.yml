@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # Banco de dados relacional
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: dotnet_python_postgres
+    environment:
+      POSTGRES_DB: financial_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secretpassword
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Simulador da AWS (SQS e S3)
+  localstack:
+    image: localstack/localstack:latest
+    container_name: aws_localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs,s3
+      - DEFAULT_REGION=us-east-1
+    volumes:
+      - localstack_data:/var/lib/localstack
+
+volumes:
+  postgres_data:
+  localstack_data:
