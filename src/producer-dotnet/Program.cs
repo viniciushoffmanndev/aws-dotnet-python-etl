@@ -1,55 +1,64 @@
+using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using Microsoft.EntityFrameworkCore;
+using ProducerDotNet;
 using System.Text.Json;
-using ProducerDotnet;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configuração do cliente do SQS apontando para o LocalStack (Docker)
-builder.Services.AddSingleton<IAmazonSQS>(sp =>
+// 1. Configura o Entity Framework Core com o PostgreSQL
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// 2. Configura o cliente do Amazon SQS apontando para o LocalStack
+var sqsConfig = new AmazonSQSConfig
 {
-    var config = new AmazonSQSConfig
-    {
-        ServiceURL = "http://localhost:4566", // Porta do LocalStack
-        AuthenticationRegion = "us-east-1"
-    };
-    // Usamos credenciais fakes já que o LocalStack roda localmente
-    return new AmazonSQSClient("fake-access-key", "fake-secret-key", config);
-});
+    ServiceURL = "http://localhost:4566",
+    AuthenticationRegion = "us-east-1"
+};
+
+builder.Services.AddSingleton<IAmazonSQS>(new AmazonSQSClient("fake-access-key", "fake-secret-key", sqsConfig));
+
 
 var app = builder.Build();
 
-app.UseHttpsRedirection();
-
-// Endpoint para receber transações e publicar no SQS
-app.MapPost("/api/transactions", async (Transaction transaction, IAmazonSQS sqsClient) =>
+// Endpoint para receber transações via HTTP (POST)
+app.MapPost("/api/transactions", async (Transaction transaction, AppDbContext db, IAmazonSQS sqsClient) =>
 {
-    if (string.IsNullOrWhiteSpace(transaction.AssetCode) || transaction.Price <= 0)
-    {
-        return Results.BadRequest("Dados da transação inválidos.");
-    }
+    // Preenche os metadados da transação
+    transaction.Id = Guid.NewGuid();
+    transaction.CreatedAt = DateTime.UtcNow;
 
-    // Serializa o objeto Transaction para JSON
-    string messageBody = JsonSerializer.Serialize(transaction);
+    // Ação 1: Salva no PostgreSQL
+    db.Transactions.Add(transaction);
+    await db.SaveChangesAsync();
 
-    // Envia a mensagem para a fila SQS do LocalStack
+    // Ação 2: Envia para o SQS local
+    var queueUrl = "http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/financial-operations-queue";
+    var messageBody = JsonSerializer.Serialize(transaction);
+
     var sendMessageRequest = new SendMessageRequest
     {
-        QueueUrl = "http://localhost:4566/000000000000/financial-operations-queue",
+        QueueUrl = queueUrl,
         MessageBody = messageBody
     };
 
-    try
-    {
-        await sqsClient.SendMessageAsync(sendMessageRequest);
-        Console.WriteLine($"[API .NET] Mensagem enviada com sucesso para o SQS: {transaction.AssetCode}");
-        return Results.Ok(new { message = "Transação enviada para processamento!", id = transaction.Id });
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"[Erro] Falha ao enviar para o SQS: {ex.Message}");
-        return Results.Problem("Erro interno ao enviar para a fila de mensageria.");
-    }
+    await sqsClient.SendMessageAsync(sendMessageRequest);
+
+    // Retorna a resposta confirmando o sucesso de ambas as operações
+    return Results.Ok(new 
+    { 
+        message = "Transação salva no banco e enviada para processamento!", 
+        id = transaction.Id 
+    });
 });
+
+// Cria automaticamente a tabela no PostgreSQL caso ela não exista
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
+}
 
 app.Run();
