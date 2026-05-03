@@ -6,10 +6,6 @@
 
 
 <p align="center">
-  <img src="https://via.placeholder.com/900x250" alt="event-driven pipeline banner"/>
-</p>
-
-<p align="center">
   <img src="https://img.shields.io/badge/.NET-8-blue">
   <img src="https://img.shields.io/badge/Python-3.11-yellow">
   <img src="https://img.shields.io/badge/PostgreSQL-15-blue">
