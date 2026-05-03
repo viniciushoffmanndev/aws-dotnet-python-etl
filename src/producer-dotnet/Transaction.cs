@@ -9,5 +9,8 @@ namespace ProducerDotNet
         public string Issuer { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public DateTime CreatedAt { get; set; }
+        
+        // Nova coluna para rastreio do status
+        public string Status { get; set; } = "Received";
     }
 }
