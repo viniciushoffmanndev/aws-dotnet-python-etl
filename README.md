@@ -1,8 +1,9 @@
 # 💼 Financial Event-Driven ETL Pipeline
 
+![Pipeline de Arquitetura](./images/pipeline-arquitetura.jpg)
+
 ### .NET • Python • AWS (SQS) • PostgreSQL • Docker
 
-![Pipeline de Arquitetura](./images/pipeline-arquitetura.jpg)
 
 <p align="center">
   <img src="https://via.placeholder.com/900x250" alt="event-driven pipeline banner"/>
