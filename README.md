@@ -1,6 +1,6 @@
 # 💼 Financial Event-Driven ETL Pipeline
 
-![Pipeline de Arquitetura](./images/pipeline-arquitetura.jpg)
+![Pipeline de Arquitetura](images/pipeline-arquitetura.png)
 
 ### .NET • Python • AWS (SQS) • PostgreSQL • Docker
 
