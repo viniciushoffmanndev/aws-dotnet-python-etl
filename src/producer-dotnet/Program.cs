@@ -54,6 +54,19 @@ app.MapPost("/api/transactions", async (Transaction transaction, AppDbContext db
     });
 });
 
+
+// NOVO ENDPOINT: Listar transações salvas no PostgreSQL
+app.MapGet("/api/transactions", async (AppDbContext db) =>
+{
+    // Busca todas as transações no banco de dados ordenando pelas mais recentes
+    var transactions = await db.Transactions
+        .OrderByDescending(t => t.CreatedAt)
+        .ToListAsync();
+
+    return Results.Ok(transactions);
+});
+
+
 // Cria automaticamente a tabela no PostgreSQL caso ela não exista
 using (var scope = app.Services.CreateScope())
 {
